@@ -46,7 +46,7 @@ mkdir -p config/gnu config/m4
 
 # Generate M4 includes
 echo "Generating aclocal.m4..."
-aclocal -I config/m4
+aclocal -I /usr/share/aclocal -I config/m4
 echo "done."
 
 # Generate configure auxiliary files
