@@ -1,23 +1,17 @@
-/* Copyright (C) 2011-2016 Joseba Alberdi <alberdi@hotmail.es>
+/* Copyright (C) 2011-2017 Joseba Alberdi <alberdi@hotmail.es>
  *                         Micael Oliveira <micael.oliveira@mpsd.mpg.de>
- *                         Yann Pouillon <notifications@materialsevolution.es>
+ *                         Yann Pouillon <devops@materialsevolution.es>
  *
  * This file is part of Libpspio.
  *
- * Libpspio is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation, version 3 of the License, or (at your option) any later
- * version.
+ * This Source Code Form is subject to the terms of the Mozilla Public License,
+ * version 2.0. If a copy of the MPL was not distributed with this file, You
+ * can obtain one at https://mozilla.org/MPL/2.0/.
  *
  * Libpspio is distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+ * FOR A PARTICULAR PURPOSE. See the Mozilla Public License version 2.0 for
  * more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Libpspio.  If not, see <http://www.gnu.org/licenses/> or write to
- * the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301  USA.
  */
 
 /**
@@ -74,7 +68,7 @@ int pspio_projector_alloc(pspio_projector_t **projector, int np);
  *       pspio_projector_alloc method.
  */
 int pspio_projector_init(pspio_projector_t *projector, const pspio_qn_t *qn, 
-      double energy, const pspio_mesh_t *mesh, const double *pofr);
+                         const pspio_mesh_t *mesh, const double *pofr);
 
 /**
  * Duplicates a projector structure.
@@ -97,6 +91,19 @@ int pspio_projector_copy(pspio_projector_t **dst, const pspio_projector_t *src);
  */
 void pspio_projector_free(pspio_projector_t *projector);
 
+
+/**********************************************************************
+ * Setters                                                            *
+ **********************************************************************/
+
+/**
+ * Specify the energy of the projector
+ *
+ * @param[in] projector: projector structure
+ * @param[in] energy: value of the projector energy
+ * @return error code
+ */
+int pspio_projector_set_energy(pspio_projector_t *projector, double energy);
 
 /**********************************************************************
  * Getters                                                            *

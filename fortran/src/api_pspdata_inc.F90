@@ -1,22 +1,17 @@
-!! Copyright (C) 2015-2016 Micael Oliveira <micael.oliveira@mpsd.mpg.de>
-!!                         Yann Pouillon <notifications@materialsevolution.es>
+!! Copyright (C) 2015-2018 Damien Caliste <dcaliste@free.fr>
+!!                         Micael Oliveira <micael.oliveira@mpsd.mpg.de>
+!!                         Yann Pouillon <devops@materialsevolution.es>
 !!
 !! This file is part of Libpspio.
 !!
-!! Libpspio is free software: you can redistribute it and/or modify it under
-!! the terms of the GNU Lesser General Public License as published by the Free
-!! Software Foundation, version 3 of the License, or (at your option) any later
-!! version.
+!! This Source Code Form is subject to the terms of the Mozilla Public License,
+!! version 2.0. If a copy of the MPL was not distributed with this file, You
+!! can obtain one at https://mozilla.org/MPL/2.0/.
 !!
 !! Libpspio is distributed in the hope that it will be useful, but WITHOUT ANY
 !! WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-!! FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+!! FOR A PARTICULAR PURPOSE. See the Mozilla Public License version 2.0 for
 !! more details.
-!!
-!! You should have received a copy of the GNU Lesser General Public License
-!! along with Libpspio.  If not, see <http://www.gnu.org/licenses/> or write to
-!! the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-!! 02110-1301  USA.
 
 
 !*********************************************************************!
@@ -289,8 +284,8 @@ end function pspiof_pspdata_get_pspinfo
 ! symbol
 character(len=3) function pspiof_pspdata_get_symbol(pspdata) result(symbol)
   type(pspiof_pspdata_t), intent(in) :: pspdata
- 
-  call c_to_f_string(pspio_pspdata_get_symbol(pspdata%ptr), symbol)
+
+  call c_to_f_string_ptr(pspio_pspdata_get_symbol(pspdata%ptr), symbol)
 
 end function pspiof_pspdata_get_symbol
 
@@ -448,3 +443,12 @@ type(pspiof_meshfunc_t) function pspiof_pspdata_get_rho_valence(pspdata) result(
   rho_valence%ptr = pspio_pspdata_get_rho_valence(pspdata%ptr)
 
 end function pspiof_pspdata_get_rho_valence
+
+! projector interaction
+real(8) function pspiof_pspdata_get_projector_energy(pspdata, i, j) result(energy)
+  type(pspiof_pspdata_t),  intent(in) :: pspdata
+  integer, intent(in) :: i, j
+
+  energy = pspio_pspdata_get_projector_energy(pspdata%ptr, i - 1, j - 1)
+
+end function pspiof_pspdata_get_projector_energy

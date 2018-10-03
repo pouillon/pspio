@@ -1,22 +1,16 @@
-/* Copyright (C) 2012-2016 Micael Oliveira <micael.oliveira@mpsd.mpg.de>
- *                         Yann Pouillon <notifications@materialsevolution.es>
+/* Copyright (C) 2012-2017 Micael Oliveira <micael.oliveira@mpsd.mpg.de>
+ *                         Yann Pouillon <devops@materialsevolution.es>
  *
  * This file is part of Libpspio.
  *
- * Libpspio is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation, version 3 of the License, or (at your option) any later
- * version.
+ * This Source Code Form is subject to the terms of the Mozilla Public License,
+ * version 2.0. If a copy of the MPL was not distributed with this file, You
+ * can obtain one at https://mozilla.org/MPL/2.0/.
  *
  * Libpspio is distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+ * FOR A PARTICULAR PURPOSE. See the Mozilla Public License version 2.0 for
  * more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Libpspio.  If not, see <http://www.gnu.org/licenses/> or write to
- * the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301  USA.
  */
 
 /** 
@@ -39,21 +33,25 @@ int upf_tag_init(FILE * fp, const char * tag, int go_back)
   char line[PSPIO_STRLEN_LINE];
   char init_tag[PSPIO_STRLEN_LINE];
   char * read_string = NULL;
+  int ln;
 
   if ( go_back ) rewind(fp);
   
   /* Prepare base string */
-  sprintf(init_tag, "<%s>", tag);
+  sprintf(init_tag, "<%s", tag);
 
   while ( fgets(line, sizeof line, fp) != NULL ) {
     /* Skip white spaces */
-    if ( line[0] == ' ' )
-      read_string = strtok(line," ");
-    else 
-      read_string = line;
+    read_string = line;
+    while (read_string[0] == ' ') read_string++;
 
-    if ( strncasecmp(read_string, init_tag, strlen(init_tag)) == 0 ) {
-      return PSPIO_SUCCESS;
+    ln = strlen(init_tag);
+    if ( strncasecmp(read_string, init_tag, ln) == 0 ) {
+      if ( strchr(read_string + ln, '>') ) return PSPIO_SUCCESS;
+      while ( fgets(line, sizeof line, fp) != NULL ) {
+        if ( strchr(line, '>') ) return PSPIO_SUCCESS;
+      }
+      return PSPIO_EFILE_CORRUPT;
     }
   }
 
@@ -87,31 +85,41 @@ int upf_tag_check_end(FILE *fp, const char *tag)
   return status;
 }
 
-
 int upf_tag_isdef(FILE *fp, const char *tag)
+{
+  return (upf_tag_init(fp, tag, GO_BACK) == PSPIO_SUCCESS);
+}
+
+char* upf_tag_read_attr(FILE *fp, const char * tag, const char * attr,
+                        char buf[PSPIO_STRLEN_LINE])
 {
   char line[PSPIO_STRLEN_LINE];
   char init_tag[PSPIO_STRLEN_LINE];
-  char * read_string = NULL;
+  char * read_string = NULL, * at = NULL;
+  int tag_found = 0;
 
-  /* Go to the beginning of the buffer */
   rewind(fp);
   
   /* Prepare base string */
-  sprintf(init_tag, "<%s>", tag);
+  sprintf(init_tag, "<%s", tag);
 
-  while ( fgets(line, sizeof line, fp) != NULL ) {
+  while ( fgets(at ? line : buf, PSPIO_STRLEN_LINE, fp) != NULL ) {
     /* Skip white spaces */
-    if ( line[0] == ' ' )
-      read_string = strtok(line," ");
-    else 
-      read_string = line;
+    read_string = at ? line : buf;
+    while (read_string[0] == ' ') read_string++;
 
-    if ( strncasecmp(read_string, init_tag, strlen(init_tag)) == 0 ) {
-      return 1;
+    if ( !tag_found && strncasecmp(read_string, init_tag, strlen(init_tag)) == 0 ) {
+      tag_found = 1;
+      read_string += strlen(init_tag);
+    }
+    if ( tag_found && !at && (at = strstr(read_string, attr)) ) {
+      at = strtok(at, "=");
+    }
+    /* Ensure that lines are eaten up to the closing bracket. */
+    if ( tag_found && strchr(read_string, '>') ) {
+      return at ? strtok(NULL, " \"") : at;
     }
   }
 
-  /* End of the buffer reached; so return false */
-  return 0;
+  return (char*)0;
 }

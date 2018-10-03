@@ -1,24 +1,18 @@
-/* Copyright (C) 2011-2016 Joseba Alberdi <alberdi@hotmail.es>
+/* Copyright (C) 2011-2017 Joseba Alberdi <alberdi@hotmail.es>
  *                         Matthieu Verstraete <matthieu.jean.verstraete@gmail.com>
  *                         Micael Oliveira <micael.oliveira@mpsd.mpg.de>
- *                         Yann Pouillon <notifications@materialsevolution.es>
+ *                         Yann Pouillon <devops@materialsevolution.es>
  *
  * This file is part of Libpspio.
  *
- * Libpspio is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation, version 3 of the License, or (at your option) any later
- * version.
+ * This Source Code Form is subject to the terms of the Mozilla Public License,
+ * version 2.0. If a copy of the MPL was not distributed with this file, You
+ * can obtain one at https://mozilla.org/MPL/2.0/.
  *
  * Libpspio is distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+ * FOR A PARTICULAR PURPOSE. See the Mozilla Public License version 2.0 for
  * more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Libpspio.  If not, see <http://www.gnu.org/licenses/> or write to
- * the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301  USA.
  */
 
 #ifndef PSPIO_PSPDATA_H
@@ -51,8 +45,8 @@ typedef struct{
   int format_guessed;/**< Format of the file guessed by pspio_pspdata_read. */
   char symbol[4];    /**< Atomic symbol */
   double z;          /**< Atomic number */
-  double zvalence;   /**< charge of pseudopotential ion - valence electrons */
-  double nelvalence; /**< number of electrons - normally equal to zion, except for special cases for ions */
+  double zvalence;   /**< charge of pseudopotential ion */
+  double nelvalence; /**< number of electrons; normally equal to zvalence, except for special cases for ions */
   int l_max;         /**< maximal angular momentum channel */
   int wave_eq;       /**< type of wave equation which was solved: Dirac, Scalar Relativistic, or Schroedinger */
   double total_energy; /**< the total energy of the pseudo atom */
@@ -72,7 +66,8 @@ typedef struct{
 
   /* Non-local projectors */
   int n_projectors;               /**< number of projectors */
-  int *n_projectors_per_l;       /**< number of projectors per angular momentum */
+  int *n_projectors_per_l;        /**< number of projectors per angular momentum */
+  double *projector_energies;     /**< Dij terms for interactions between projectors */
   pspio_projector_t **projectors; /**< projectors */
   int projectors_l_max;           /**< maximum angular momentum of considered in the projectors */
   int l_local;                    /**< angular momentum channel of local potential */
@@ -296,6 +291,13 @@ int pspio_pspdata_set_xc(pspio_pspdata_t *pspdata, const pspio_xc_t *xc);
  */
 int pspio_pspdata_set_rho_valence(pspio_pspdata_t *pspdata, const pspio_meshfunc_t *rho_valence);
 
+/**
+ * @param[in,out] pspdata: pointer to pspdata structure
+ * @param[in] energies: matrix of projector energies (ordered [i * n + j])
+ * @return error code
+ */
+int pspio_pspdata_set_projector_energies(pspio_pspdata_t *pspdata,
+                                         const double *energies);
 
 /**********************************************************************
  * Getters                                                            *
@@ -441,5 +443,14 @@ const pspio_xc_t * pspio_pspdata_get_xc(const pspio_pspdata_t *pspdata);
  * @return pointer to the valence density
  */
 const pspio_meshfunc_t * pspio_pspdata_get_rho_valence(const pspio_pspdata_t *pspdata);
+
+/**
+ * @param[in] pspdata: pointer to pspdata structure
+ * @param[in] i: index of first projector
+ * @param[in] j: index of second projector
+ * @return the interaction energy between projector i and projector j
+ */
+double pspio_pspdata_get_projector_energy(const pspio_pspdata_t *pspdata,
+                                          int i, int j);
 
 #endif

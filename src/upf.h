@@ -1,23 +1,17 @@
 /* Copyright (C) 2011-2016 Joseba Alberdi <alberdi@hotmail.es>
  *                         Micael Oliveira <micael.oliveira@mpsd.mpg.de>
- *                         Yann Pouillon <notifications@materialsevolution.es>
+ *                         Yann Pouillon <devops@materialsevolution.es>
  *
  * This file is part of Libpspio.
  *
- * Libpspio is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation, version 3 of the License, or (at your option) any later
- * version.
+ * This Source Code Form is subject to the terms of the Mozilla Public License,
+ * version 2.0. If a copy of the MPL was not distributed with this file, You
+ * can obtain one at https://mozilla.org/MPL/2.0/.
  *
  * Libpspio is distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+ * FOR A PARTICULAR PURPOSE. See the Mozilla Public License version 2.0 for
  * more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Libpspio.  If not, see <http://www.gnu.org/licenses/> or write to
- * the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301  USA.
  */
 
 /**
@@ -232,6 +226,16 @@ int upf_tag_check_end(FILE *fp, const char *tag);
  */
 int upf_tag_isdef(FILE *fp, const char *tag);
 
+/**
+ * Read the value of an attribute.
+ * @param[in] fp a stream of the input file
+ * @param[in] tag the tag. It is case-insensitive
+ * @param[in] attr the attribute. It is case-insensitive
+ * @param[inout] buf. A buffer to store the read line
+ * @return a pointer to the start of the attribute in buf, if found.
+ */
+char* upf_tag_read_attr(FILE *fp, const char * tag, const char * attr,
+                        char buf[PSPIO_STRLEN_LINE]);
 
 /**********************************************************************
  * upf_xc routines                                                    *

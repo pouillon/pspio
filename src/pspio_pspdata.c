@@ -1,24 +1,19 @@
-/* Copyright (C) 2011-2016 Joseba Alberdi <alberdi@hotmail.es>
+/* Copyright (C) 2011-2018 Damien Caliste <dcaliste@free.fr>
+ *                         Joseba Alberdi <alberdi@hotmail.es>
  *                         Matthieu Verstraete <matthieu.jean.verstraete@gmail.com>
  *                         Micael Oliveira <micael.oliveira@mpsd.mpg.de>
- *                         Yann Pouillon <notifications@materialsevolution.es>
+ *                         Yann Pouillon <devops@materialsevolution.es>
  *
  * This file is part of Libpspio.
  *
- * Libpspio is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation, version 3 of the License, or (at your option) any later
- * version.
+ * This Source Code Form is subject to the terms of the Mozilla Public License,
+ * version 2.0. If a copy of the MPL was not distributed with this file, You
+ * can obtain one at https://mozilla.org/MPL/2.0/.
  *
  * Libpspio is distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+ * FOR A PARTICULAR PURPOSE. See the Mozilla Public License version 2.0 for
  * more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Libpspio.  If not, see <http://www.gnu.org/licenses/> or write to
- * the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301  USA.
  */
 
 #include <stdio.h>
@@ -73,6 +68,7 @@ int pspio_pspdata_alloc(pspio_pspdata_t **pspdata)
 
   (*pspdata)->n_projectors = 0;
   (*pspdata)->n_projectors_per_l = NULL;
+  (*pspdata)->projector_energies = NULL;
   (*pspdata)->projectors = NULL;
   (*pspdata)->projectors_l_max = 0;
   (*pspdata)->l_local = 0;
@@ -150,7 +146,8 @@ int pspio_pspdata_read(pspio_pspdata_t *pspdata, int file_format,
   FULFILL_OR_RETURN(ierr == PSPIO_SUCCESS, ierr);
 
   /* Create states lookup table */
-  SUCCEED_OR_RETURN( pspio_states_lookup_table(pspdata->n_states, pspdata->states, &pspdata->qn_to_istate) );
+  if (pspdata->n_states > 0)
+    SUCCEED_OR_RETURN( pspio_states_lookup_table(pspdata->n_states, pspdata->states, &pspdata->qn_to_istate) );
 
   return PSPIO_SUCCESS;
 }
@@ -256,6 +253,10 @@ void pspio_pspdata_reset(pspio_pspdata_t *pspdata)
     }
     free(pspdata->projectors);
     pspdata->projectors = NULL;
+  }
+  if (pspdata->projector_energies != NULL) {
+    free(pspdata->projector_energies);
+    pspdata->projector_energies = NULL;
   }
   pspdata->n_projectors = 0;
   if (pspdata->n_projectors_per_l != NULL) {
@@ -465,6 +466,7 @@ int pspio_pspdata_set_n_projectors(pspio_pspdata_t *pspdata, int n_projectors)
       pspio_projector_free(pspdata->projectors[ip]);
     }
     free(pspdata->projectors);
+    free(pspdata->projector_energies);
   }
 
   pspdata->n_projectors = n_projectors;
@@ -474,6 +476,9 @@ int pspio_pspdata_set_n_projectors(pspio_pspdata_t *pspdata, int n_projectors)
   for (ip=0; ip<pspdata->n_projectors; ip++) {
     pspdata->projectors[ip] = NULL;
   }
+  pspdata->projector_energies = (double*) malloc ( pspdata->n_projectors * pspdata->n_projectors * sizeof(double));
+  FULFILL_OR_EXIT(pspdata->projector_energies != NULL, PSPIO_ENOMEM);
+  memset(pspdata->projector_energies, '\0', pspdata->n_projectors * pspdata->n_projectors * sizeof(double));
 
   return PSPIO_SUCCESS;
 }
@@ -496,6 +501,7 @@ int pspio_pspdata_set_n_projectors_per_l(pspio_pspdata_t *pspdata, int *n_ppl)
 int pspio_pspdata_set_projector(pspio_pspdata_t *pspdata, int index, const pspio_projector_t *projector)
 {
   assert(pspdata != NULL);
+  assert(index >= 0 && index < pspdata->n_projectors);
 
   SUCCEED_OR_RETURN( pspio_projector_copy(&(pspdata->projectors[index]), projector) )
 
@@ -543,6 +549,31 @@ int pspio_pspdata_set_rho_valence(pspio_pspdata_t *pspdata, const pspio_meshfunc
   assert(pspdata != NULL);
 
   SUCCEED_OR_RETURN( pspio_meshfunc_copy(&(pspdata->rho_valence), rho_valence) )
+
+  return PSPIO_SUCCESS;
+}
+
+int pspio_pspdata_set_projector_energies(pspio_pspdata_t *pspdata,
+                                         const double *energies)
+{
+  int i, j;
+
+  assert(pspdata != NULL);
+  assert(pspdata->projector_energies != NULL && energies != NULL);
+
+  for (i = 0; i < pspdata->n_projectors; i++) {
+    pspio_projector_set_energy(pspdata->projectors[i],
+                               energies[i * pspdata->n_projectors + i]);
+    pspdata->projector_energies[i * pspdata->n_projectors + i] =
+      energies[i * pspdata->n_projectors + i];
+    for (j = i + 1; j < pspdata->n_projectors; j++) {
+      pspdata->projector_energies[i * pspdata->n_projectors + j] = 0.5 *
+        (energies[i * pspdata->n_projectors + j] +
+         energies[j * pspdata->n_projectors + i]);
+      pspdata->projector_energies[j * pspdata->n_projectors + i] =
+        pspdata->projector_energies[i * pspdata->n_projectors + j];
+    }
+  }
 
   return PSPIO_SUCCESS;
 }
@@ -632,6 +663,7 @@ int pspio_pspdata_get_n_states(const pspio_pspdata_t *pspdata)
 const pspio_state_t * pspio_pspdata_get_state(const pspio_pspdata_t *pspdata, int index)
 {
   assert(pspdata != NULL);
+  assert(index >= 0 && index < pspdata->n_states);
 
   return pspdata->states[index];
 }
@@ -653,6 +685,7 @@ int pspio_pspdata_get_n_potentials(const pspio_pspdata_t *pspdata)
 const pspio_potential_t * pspio_pspdata_get_potential(const pspio_pspdata_t *pspdata, int index)
 {
   assert(pspdata != NULL);
+  assert(index >= 0 && index < pspdata->n_potentials);
 
   return pspdata->potentials[index];
 }
@@ -674,6 +707,7 @@ int * pspio_pspdata_get_n_projectors_per_l(const pspio_pspdata_t *pspdata)
 const pspio_projector_t * pspio_pspdata_get_projector(const pspio_pspdata_t *pspdata, int index)
 {
   assert(pspdata != NULL);
+  assert(index >= 0 && index < pspdata->n_projectors);
 
   return pspdata->projectors[index];
 }
@@ -711,4 +745,14 @@ const pspio_meshfunc_t * pspio_pspdata_get_rho_valence(const pspio_pspdata_t *ps
   assert(pspdata != NULL);
 
   return pspdata->rho_valence;
+}
+
+double pspio_pspdata_get_projector_energy(const pspio_pspdata_t *pspdata,
+                                          int i, int j)
+{
+  assert(pspdata != NULL);
+  assert(i >= 0 && i < pspdata->n_projectors);
+  assert(j >= 0 && j < pspdata->n_projectors);
+
+  return pspdata->projector_energies[i * pspdata->n_projectors + j];
 }

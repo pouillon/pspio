@@ -1,24 +1,18 @@
-/* Copyright (C) 2011-2016 Joseba Alberdi <alberdi@hotmail.es>
+/* Copyright (C) 2011-2017 Joseba Alberdi <alberdi@hotmail.es>
  *                         Matthieu Verstraete <matthieu.jean.verstraete@gmail.com>
  *                         Micael Oliveira <micael.oliveira@mpsd.mpg.de>
- *                         Yann Pouillon <notifications@materialsevolution.es>
+ *                         Yann Pouillon <devops@materialsevolution.es>
  *
  * This file is part of Libpspio.
  *
- * Libpspio is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Lesser General Public License as published by the Free
- * Software Foundation, version 3 of the License, or (at your option) any later
- * version.
+ * This Source Code Form is subject to the terms of the Mozilla Public License,
+ * version 2.0. If a copy of the MPL was not distributed with this file, You
+ * can obtain one at https://mozilla.org/MPL/2.0/.
  *
  * Libpspio is distributed in the hope that it will be useful, but WITHOUT ANY
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+ * FOR A PARTICULAR PURPOSE. See the Mozilla Public License version 2.0 for
  * more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Libpspio.  If not, see <http://www.gnu.org/licenses/> or write to
- * the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301  USA.
  */
 
 #include <stdlib.h>
@@ -67,16 +61,15 @@ int pspio_projector_alloc(pspio_projector_t **projector, int np)
 }
 
 int pspio_projector_init(pspio_projector_t *projector, const pspio_qn_t *qn, 
-			 double energy, const pspio_mesh_t *mesh,
-			 const double *pofr)
+			 const pspio_mesh_t *mesh, const double *pofr)
 {
   assert(projector != NULL);
   assert(qn != NULL);
   assert(mesh != NULL);
   assert(pofr != NULL);
 
+  projector->energy = 0.;
   SUCCEED_OR_RETURN(pspio_qn_copy(&projector->qn, qn));
-  projector->energy = energy;
   SUCCEED_OR_RETURN(pspio_meshfunc_init(projector->proj, mesh, pofr, NULL, NULL));
 
   return PSPIO_SUCCESS;
@@ -120,6 +113,19 @@ void pspio_projector_free(pspio_projector_t *projector)
   }
 }
 
+
+/**********************************************************************
+ * Setters                                                            *
+ **********************************************************************/
+
+int pspio_projector_set_energy(pspio_projector_t *projector, double energy)
+{
+  assert(projector != NULL);
+
+  projector->energy = energy;
+
+  return PSPIO_SUCCESS;
+}
 
 /**********************************************************************
  * Getters                                                            *

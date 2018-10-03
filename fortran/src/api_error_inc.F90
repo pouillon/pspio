@@ -1,22 +1,16 @@
-!! Copyright (C) 2015-2016 Micael Oliveira <micael.oliveira@mpsd.mpg.de>
-!!                         Yann Pouillon <notifications@materialsevolution.es>
+!! Copyright (C) 2015-2017 Micael Oliveira <micael.oliveira@mpsd.mpg.de>
+!!                         Yann Pouillon <devops@materialsevolution.es>
 !!
 !! This file is part of Libpspio.
 !!
-!! Libpspio is free software: you can redistribute it and/or modify it under
-!! the terms of the GNU Lesser General Public License as published by the Free
-!! Software Foundation, version 3 of the License, or (at your option) any later
-!! version.
+!! This Source Code Form is subject to the terms of the Mozilla Public License,
+!! version 2.0. If a copy of the MPL was not distributed with this file, You
+!! can obtain one at https://mozilla.org/MPL/2.0/.
 !!
 !! Libpspio is distributed in the hope that it will be useful, but WITHOUT ANY
 !! WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-!! FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+!! FOR A PARTICULAR PURPOSE. See the Mozilla Public License version 2.0 for
 !! more details.
-!!
-!! You should have received a copy of the GNU Lesser General Public License
-!! along with Libpspio.  If not, see <http://www.gnu.org/licenses/> or write to
-!! the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-!! 02110-1301  USA.
 
 
 !*********************************************************************!
@@ -69,9 +63,6 @@ subroutine pspiof_error_string(error_id, error_msg)
   integer,                           intent(in)  :: error_id
   character(len=PSPIO_STRLEN_ERROR), intent(out) :: error_msg
 
-  character(kind=c_char) :: c_error_msg(PSPIO_STRLEN_ERROR)
-
-  c_error_msg = pspio_error_string(error_id)
-  call c_to_f_string(c_error_msg, error_msg)
+  call c_to_f_string_ptr(pspio_error_string(error_id), error_msg)
 
 end subroutine pspiof_error_string
